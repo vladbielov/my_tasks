@@ -1,0 +1,62 @@
+#!/bin/bash -e
+
+. ./xi-sys.cfg
+
+# Was previous step completed?
+if [ ! -f installed.sudoers ]; then
+    echo "sudoers were not initialized - run previous script" >&2
+    exit 1
+fi
+
+# Was this step already completed?
+if [ -f installed.firewall ]; then
+    echo "Firewall rules already configured - skipping."
+    exit 0
+fi
+
+# Skip firewall configuration for Ubuntu for now
+if [ "$distro" == "Raspbian" ] || [ "$distro" == "Ubuntu" ] || [ "$distro" == "Debian" ]; then
+    echo "Skipping firewall configuration... Not enabled."
+    touch installed.firewall
+    exit 0
+fi
+
+# Update firewall settings
+if [ "$dist" == "el7" ] || [ "$dist" == "el8" ]; then
+    # Firewalld settings for CentOS/RHEL 7 or 8 (except 7.2)
+    # - settting +e since these commands won't work if firewalld is off
+    set +e
+    if [ `command -v firewall-cmd` ]; then
+        firewall-cmd --zone=public --add-port=80/tcp --permanent
+        firewall-cmd --zone=public --add-port=443/tcp --permanent
+        firewall-cmd --zone=public --add-port=22/tcp --permanent
+        firewall-cmd --zone=public --add-port=7878/tcp --permanent
+        firewall-cmd --reload
+    fi
+    set -e
+else
+    # Added check for offline and modified config to not unload
+    if [ -f $INSTALL_PATH/offline ]; then
+        cp -f nagiosxi/iptables-config /etc/sysconfig
+    fi
+
+    cp -f nagiosxi/iptables /etc/sysconfig
+    cp -f nagiosxi/ip6tables /etc/sysconfig
+fi
+
+if [ "$distro" == "SUSE LINUX" ]; then
+    echo "SuSE Firewall"
+    # rcSuSEfirewall2 restart
+else
+    if [ ! `command -v firewall-cmd` ]; then
+        if [ "$dist" != "el7" ] && [ "$dist" != "el8" ]; then
+            service iptables restart
+            if [ -f /etc/init.d/ip6tables ]; then
+                service ip6tables restart
+            fi
+        fi
+    fi
+fi
+
+echo "Firewall rules updated OK"
+touch installed.firewall

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+perl mysql2pgsql.perl ../nagiosxi/schema.mysql.sql ../nagiosxi/schema.pgsql.sql

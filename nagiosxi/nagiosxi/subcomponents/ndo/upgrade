@@ -1,0 +1,32 @@
+#!/bin/bash -e
+
+pkgname="ndo-3.0.2"
+
+echo "UPGRADE: NDO is being upgraded..."
+
+# Delete the old directory
+rm -rf "$pkgname"
+
+# Extract archive
+tar -xzf "$pkgname.tar.gz"
+
+# Make and install NDO
+(
+	cd "./$pkgname"
+
+	./configure
+	make all
+	make install
+	make install-broker-line
+
+	# Copy startup hash file, disabled by default
+	cp -f src/ndo-startup-hash.sh /usr/local/nagios/bin
+)
+
+# Post-upgrade stuff
+./post-upgrade "$pkgname"
+
+# Delete the directory (source files not needed anymore)
+rm -rf "$pkgname"
+
+echo "UPGRADE: NDO upgraded OK."

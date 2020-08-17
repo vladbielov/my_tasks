@@ -1,0 +1,38 @@
+#!/bin/bash -e
+
+. ./xi-sys.cfg
+
+# Was previous step completed?
+if [ ! -f installed.sourceguardian ]; then
+	echo "Sourceguardian was not configured - run previous script" >&2
+	exit 1
+fi
+
+# Was this step already completed?
+if [ -f installed.phpini ]; then
+	echo "PHP already configured - skipping."
+	exit 0
+fi
+
+# Set timezone in PHP script (this will also be done by the PHP on final install)
+if [ -r /etc/sysconfig/clock ]; then
+    . /etc/sysconfig/clock
+    timezone="$ZONE"
+elif [ `command -v timedatectl` ]; then
+    timezone=$(timedatectl | awk '/Time zone:/ {print $3}')
+fi
+sed -i "s|^;date\.timezone =.*|date.timezone = $timezone|" "$phpini" || true
+
+# Set filesize and post limits
+sed -i "s/^upload_max_filesize =.*/upload_max_filesize = 20M/" "$phpini" || true
+sed -i "s/^post_max_size =.*/post_max_size = 21M/" "$phpini" || true
+sed -i "s/^; max_input_vars =.*/max_input_vars = 5000/" "$phpini" || true
+
+# Set PHP memory limit and run time for scripts
+sed -i "s/^max_execution_time =.*/max_execution_time = 60/" "$phpini" || true
+sed -i "s/^max_input_time =.*/max_input_time = 120/" "$phpini" || true
+sed -i "s/^memory_limit =.*/memory_limit = 256M/" "$phpini" || true
+
+echo "PHP configured OK"
+touch installed.phpini
+
