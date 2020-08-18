@@ -1,6 +1,0 @@
-#!/bin/bash -e
-
-pkgname="$1"
-
-# Fix protocol to accept more protocol variants
-patch "$pkgname/bin/cfgmaker" < patches/v3_privprotocol.patch

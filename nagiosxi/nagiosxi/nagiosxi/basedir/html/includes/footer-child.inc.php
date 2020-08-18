@@ -1,4 +1,0 @@
-<!-- CHILD FOOTER START -->
-
-
-<!-- CHILD FOOTER END -->

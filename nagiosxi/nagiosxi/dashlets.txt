@@ -1,3 +1,0 @@
-custom-dashlet
-googlemapdashlet
-rss_dashlet

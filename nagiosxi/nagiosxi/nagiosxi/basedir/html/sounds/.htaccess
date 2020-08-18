@@ -1,2 +1,0 @@
-# Make sure php files are never ran
-php_flag engine off
